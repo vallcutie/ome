@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matched Chat</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="chatContainer" class="container">
+        <div class="header">
+            <h2>Vagle</h2>
+        </div>
+        <div class="match-section">
+            <label for="topicInput">Match Topic:</label>
+            <input type="text" id="topicInput" class="topic-input" placeholder="Enter topic">
+            <button onclick="startChat()" class="match-button">Match</button>
+        </div>
+        <div id="chatLog" class="chat-log"></div>
+        <div class="message-section">
+            <input type="text" id="messageInput" class="message-input" placeholder="Type your message">
+            <button onclick="sendMessage()" class="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        let localConnection;
+let dataChannel;
+let matchTopic;
+
+function setupDataChannel() {
+    const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+    localConnection = new RTCPeerConnection(configuration);
+
+    dataChannel = localConnection.createDataChannel('chatChannel');
+
+    dataChannel.onopen = () => {
+        console.log('Data channel is open');
+    };
+
+    dataChannel.onmessage = event => {
+        receiveChatMessage(event.data, 'remote');
+    };
+
+    localConnection.onicecandidate = event => {
+        if (event.candidate) {
+            // Send the ICE candidate to the remote peer
+        }
+    };
+}
+
+function startChat() {
+    matchTopic = document.getElementById('topicInput').value.trim();
+
+    if (matchTopic !== '') {
+        setupDataChannel();
+        const offer = localConnection.createOffer()
+            .then(offer => localConnection.setLocalDescription(offer))
+            .then(() => {
+                // Send the offer and matchTopic to the remote peer
+            })
+            .catch(error => console.error('Error creating offer:', error));
+    }
+}
+
+function receiveChatMessage(message, sender) {
+    appendMessage(message, sender);
+}
+
+function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
+
+    if (message !== '') {
+        appendMessage(message, 'local');
+        dataChannel.send(message);
+        messageInput.value = '';
+    }
+}
+
+function appendMessage(message, sender) {
+    const chatLog = document.getElementById('chatLog');
+    const messageElement = document.createElement('div');
+    messageElement.textContent = message;
+    messageElement.classList.add('chat-bubble', sender);
+    chatLog.appendChild(messageElement);
+}
+
+// Handle receiving the offer from the remote peer and creating an answer
+// Also, handle receiving the answer from the remote peer
+// Set up the data channel on the remote peer
+
+    </script>
+</body>
+</html>
